@@ -166,10 +166,10 @@ This project showcases:
 
 ## 🚀 Current Status
 
-✔ Real-time data generation implemented  
-✔ FastAPI ingestion layer operational  
-✔ PostgreSQL storage integration completed  
-✔ ELT + KPI SQL layer implemented (initial version)  
+✔ Real-time ingestion working  
+✔ Cloud deployment on Render  
+✔ Supabase PostgreSQL integration  
+✔ Streaming simulator active  
 
 ---
 
