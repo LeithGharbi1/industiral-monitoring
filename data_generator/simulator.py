@@ -1,3 +1,4 @@
+import os
 import random
 import time
 from datetime import datetime
@@ -96,7 +97,7 @@ def generate_event():
 # STREAMING ENGINE
 # -----------------------------
 
-API_URL = "http://127.0.0.1:8000/ingest"
+API_URL = os.getenv("API_URL", "http://ingestion:8000/ingest")
 
 def stream_data(interval=2):
     print("Streaming to FastAPI ingestion layer...")
@@ -104,11 +105,18 @@ def stream_data(interval=2):
     while True:
         event = generate_event()
 
-        response = requests.post(API_URL, json=event)
+        try:
+            response = requests.post(API_URL, json=event, timeout=5)
 
-        print(response.json())
+            if response.status_code == 200:
+                print("sent ✔")
+            else:
+                print("failed:", response.text)
+        except requests.exceptions.RequestException as e:
+            print("ingestion not ready:", e)
 
         time.sleep(interval)
+
 
 # -----------------------------
 # MAIN
