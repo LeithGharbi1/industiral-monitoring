@@ -1,8 +1,16 @@
+import logging
 import os
 import random
 import time
 from datetime import datetime
 import requests
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+logger = logging.getLogger(__name__)
 # -----------------------------
 # CONFIGURATION
 # -----------------------------
@@ -100,7 +108,7 @@ def generate_event():
 API_URL = "https://cloud-industrial-data-platform.onrender.com/ingest"
 
 def stream_data(interval=2):
-    print("Streaming to FastAPI ingestion layer...")
+    logger.info("Streaming to FastAPI ingestion layer...")
 
     while True:
         event = generate_event()
@@ -109,11 +117,12 @@ def stream_data(interval=2):
             response = requests.post(API_URL, json=event, timeout=5)
 
             if response.status_code == 200:
-                print("sent ✔")
+                logger.info("sent ✔")
             else:
-                print("failed:", response.text)
+                logger.error(f"failed: {response.status_code} - {response.text}")
+
         except requests.exceptions.RequestException as e:
-            print("ingestion not ready:", e)
+            logger.exception(f"ingestion error: {str(e)}")
 
         time.sleep(interval)
 
