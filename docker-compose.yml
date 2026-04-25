@@ -2,40 +2,54 @@ version: "3.9"
 
 services:
 
-  db:
-    image: postgres:15
-    container_name: industrial_db
-    restart: always
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: industrial
+  redis:
+    image: redis:7
     ports:
-      - "5433:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./ingestion/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    
-  ingestion:
-    build: ./ingestion
-    container_name: ingestion_service
-    depends_on:
-      - db
+      - "6379:6379"
+
+  api:
+    build:
+      context: .
+      dockerfile: src/docker/Dockerfile.api
+    working_dir: /app
     ports:
       - "8000:8000"
     environment:
-      DB_HOST: db
-      DB_NAME: industrial
-      DB_USER: admin
-      DB_PASSWORD: admin
+      PYTHONPATH: /app/src
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
+    depends_on:
+      - redis
+
+  worker:
+    build:
+      context: .
+      dockerfile: src/docker/Dockerfile.worker
+    working_dir: /app
+    environment:
+      PYTHONPATH: /app/src
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
+    depends_on:
+      - redis
 
   generator:
-    build: ./data_generator
-    container_name: generator_service
-    depends_on:
-      - ingestion
+    build:
+      context: .
+      dockerfile: src/docker/Dockerfile.generator
+    working_dir: /app
     environment:
-      API_URL: http://ingestion:8000/ingest
-
-volumes:
-  pgdata:
+      PYTHONPATH: /app/src
+      API_URL: ${API_URL}
+    depends_on:
+      - api
