@@ -10,7 +10,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: src/docker/Dockerfile.api
+      dockerfile: docker/Dockerfile.api
     working_dir: /app
     ports:
       - "8000:8000"
@@ -29,7 +29,7 @@ services:
   worker:
     build:
       context: .
-      dockerfile: src/docker/Dockerfile.worker
+      dockerfile: docker/Dockerfile.worker
     working_dir: /app
     environment:
       PYTHONPATH: /app/src
@@ -46,7 +46,7 @@ services:
   generator:
     build:
       context: .
-      dockerfile: src/docker/Dockerfile.generator
+      dockerfile: docker/Dockerfile.generator
     working_dir: /app
     environment:
       PYTHONPATH: /app/src
