@@ -7,6 +7,12 @@ on:
 jobs:
   test-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # 👈 add this
 
     steps:
       - name: Checkout repo
@@ -25,8 +31,17 @@ jobs:
         run: |
           pytest || true
 
-      - name: Build Docker images
+      - name: Login to GHCR
+        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and tag images
         run: |
-          docker build -f docker/Dockerfile.api -t api .
-          docker build -f docker/Dockerfile.worker -t worker .
-          docker build -f docker/Dockerfile.generator -t generator .
+          docker build -f docker/Dockerfile.api -t ghcr.io/leithgharbi1/cloud-industrial-data-platform/api:latest .
+          docker build -f docker/Dockerfile.worker -t ghcr.io/leithgharbi1/cloud-industrial-data-platform/worker:latest .
+          docker build -f docker/Dockerfile.generator -t ghcr.io/leithgharbi1/cloud-industrial-data-platform/generator:latest .
+
+      - name: Push images
+        run: |
+          docker push ghcr.io/leithgharbi1/cloud-industrial-data-platform/api:latest
+          docker push ghcr.io/leithgharbi1/cloud-industrial-data-platform/worker:latest
+          docker push ghcr.io/leithgharbi1/cloud-industrial-data-platform/generator:latest
