@@ -5,6 +5,8 @@ from src.shared.database.db import get_connection
 from src.shared.database.redis_client import get_redis_client
 from src.core.logger import get_logger
 from src.shared.schemas.machine_event import MachineEvent
+import threading
+from src.services.worker.worker import worker
 
 logger = get_logger("ingestion")
 
@@ -18,6 +20,11 @@ async def lifespan(app: FastAPI):
     global redis_client
     redis_client = get_redis_client()
     logger.info("API started")
+        # start worker in background thread
+    t = threading.Thread(target=worker, daemon=True)
+    t.start()
+
+    logger.info("Worker thread started")
     yield
     logger.info("API shutting down")
 
