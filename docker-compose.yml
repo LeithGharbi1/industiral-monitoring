@@ -16,13 +16,8 @@ services:
       - "8000:8000"
     environment:
       PYTHONPATH: /app/src
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      DB_HOST: ${DB_HOST}
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_PORT: ${DB_PORT}
+      REDIS_URL: redis://redis:6379   # ADD THIS
+      DATABASE_URL: ${DATABASE_URL}
     depends_on:
       - redis
 
@@ -33,13 +28,8 @@ services:
     working_dir: /app
     environment:
       PYTHONPATH: /app/src
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      DB_HOST: ${DB_HOST}
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_PORT: ${DB_PORT}
+      REDIS_URL: redis://redis:6379   # ADD THIS
+      DATABASE_URL: ${DATABASE_URL}
     depends_on:
       - redis
 
@@ -50,6 +40,6 @@ services:
     working_dir: /app
     environment:
       PYTHONPATH: /app/src
-      API_URL: ${API_URL}
+      API_URL: http://api:8000/ingest
     depends_on:
       - api

@@ -13,16 +13,16 @@ def init_db_pool():
     if db_pool:
         return
 
+    database_url = os.getenv("DATABASE_URL")
+
+    if not database_url:
+        raise Exception("DATABASE_URL not set")
+
     try:
-        database_url = os.getenv("DATABASE_URL")
-
-        if not database_url:
-            raise Exception("DATABASE_URL not set")
-
         db_pool = pool.SimpleConnectionPool(
-            1, 10,
+            1,
+            10,
             dsn=database_url,
-            sslmode="require",
             connect_timeout=5
         )
 

@@ -1,13 +1,12 @@
 import os
 import redis
+from src.core.config import settings
 
 
 def get_redis_client():
-    redis_url = os.getenv("REDIS_URL")
+    if settings.REDIS_URL:
+        return redis.Redis.from_url(settings.REDIS_URL, decode_responses=True)
 
-    if redis_url:
-        return redis.Redis.from_url(redis_url, decode_responses=True)
-    
     return redis.Redis(
         host=os.getenv("REDIS_HOST", "localhost"),
         port=int(os.getenv("REDIS_PORT", 6379)),

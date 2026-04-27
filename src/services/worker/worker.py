@@ -1,7 +1,7 @@
 import json
 import time
 
-from src.shared.database.db import get_connection, release_connection
+from src.core.db import get_connection, release_connection
 from src.shared.database.redis_client import get_redis_client
 from src.core.logger import get_logger
 from src.core.config import settings
@@ -21,6 +21,8 @@ def worker():
     redis_client = get_redis_client()
 
     logger.info("Worker started")
+    logger.info(f"Redis host={settings.REDIS_HOST} port={settings.REDIS_PORT}")
+    logger.info(f"Queue={QUEUE_NAME}")
 
     attempt = 0
 
@@ -50,42 +52,40 @@ def worker():
                     units_ok, units_nok, defect_code, defect_category,
                     downtime, downtime_reason, temperature,
                     vibration_level, operator_id
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                )
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 """,
                 (
-                    event["id_machine"],
-                    event["machine_type"],
-                    event["line_id"],
-                    event["timestamp"],
-                    event["shift"],
-                    event["production_order_id"],
-                    event["cycle_time"],
-                    event["units_produced"],
-                    event["units_ok"],
-                    event["units_nok"],
-                    event["defect_code"],
-                    event["defect_category"],
-                    event["downtime"],
-                    event["downtime_reason"],
-                    event["temperature"],
-                    event["vibration_level"],
-                    event["operator_id"],
+                    event.get("id_machine"),
+                    event.get("machine_type"),
+                    event.get("line_id"),
+                    event.get("timestamp"),
+                    event.get("shift"),
+                    event.get("production_order_id"),
+                    event.get("cycle_time"),
+                    event.get("units_produced"),
+                    event.get("units_ok"),
+                    event.get("units_nok"),
+                    event.get("defect_code"),
+                    event.get("defect_category"),
+                    event.get("downtime"),
+                    event.get("downtime_reason"),
+                    event.get("temperature"),
+                    event.get("vibration_level"),
+                    event.get("operator_id"),
                 ),
             )
 
             conn.commit()
-            logger.info(f"inserted machine={event['id_machine']} request_id={request_id}")
-
-            attempt = 0
+            logger.info(f"inserted machine={event.get('id_machine')} request_id={request_id}")
 
         except Exception as e:
             logger.error(f"worker_error request_id={request_id} error={repr(e)}")
 
             if conn:
                 conn.rollback()
-
-            attempt += 1
-            safe_sleep(attempt)
+            logger.warning("retrying after error...")
+            time.sleep(2)  # small fixed backoff (replace exponential chaos)
 
         finally:
             if cursor:
